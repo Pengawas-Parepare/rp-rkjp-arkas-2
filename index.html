@@ -2970,12 +2970,22 @@ function renderRkjp(){
   var bar=el('div',{class:'btn-row no-print',style:'margin:0 0 14px'});
   if(hasAnyRekom(sc)){
     panel.appendChild(rekomControls(sc,'rkjpSumber','rkjpTopN','Isi otomatis dari Rapor Pendidikan',function(){
+      var tot=rekomTopSlice(sc,'rkjpSumber','rkjpTopN').length;
+      if(!tot){ state.rkjpMsg='Tidak ada rekomendasi pada sumber yang dipilih. Ganti pilihan "Isi dari" atau unggah ulang file Rapor Pendidikan.'; render(); return; }
+      var lama=(sc.rkjp||[]).filter(function(x){ return x.sourceKey&&x.sourceKey.indexOf('rapor:')===0; }).length;
+      if(lama && !confirm('Tabel RKJP akan diisi ulang sesuai pilihan ('+tot+' rekomendasi teratas). '+lama+' baris hasil isian Rapor sebelumnya diganti, termasuk jika sudah Anda ubah. Baris yang Anda tambah sendiri tidak dihapus. Lanjutkan?')) return;
+      sc.rkjp=(sc.rkjp||[]).filter(function(x){ return !(x.sourceKey&&x.sourceKey.indexOf('rapor:')===0); });
       rkjpPruneBlank(sc); sc.rkjpAuto=true;
-      var tot=rekomTopSlice(sc,'rkjpSumber','rkjpTopN').length, nAdd=raporRkjpFill(sc); save();
-      state.rkjpMsg = !tot ? 'Tidak ada rekomendasi pada sumber yang dipilih. Ganti pilihan \"Isi dari\" atau unggah ulang file Rapor Pendidikan.'
-        : nAdd ? (nAdd+' prioritas dari Rapor Pendidikan ditambahkan ke tabel.')
-        : 'Tidak ada yang ditambahkan: '+tot+' rekomendasi teratas sudah ada di tabel (sudah terisi otomatis saat halaman dibuka). Pilih \"Top\" yang lebih besar atau \"Semua\" untuk menambah lebih banyak.';
+      var nAdd=raporRkjpFill(sc);
+      // urutkan: baris dari Rapor di atas, sesuai urutan rekomendasi
+      var ord={}; rekomTopSlice(sc,'rkjpSumber','rkjpTopN').forEach(function(r,k){ ord['rapor:'+r.id]=k; });
+      var dr=sc.rkjp.filter(function(x){ return ord[x.sourceKey]!==undefined; }).sort(function(a,b){ return ord[a.sourceKey]-ord[b.sourceKey]; });
+      var lain=sc.rkjp.filter(function(x){ return ord[x.sourceKey]===undefined; });
+      sc.rkjp=dr.concat(lain);
+      save();
+      state.rkjpMsg=nAdd+' prioritas dari Rapor Pendidikan diisi ke tabel (Top '+(Number(sc.rkjpTopN)>0||sc.rkjpTopN===undefined?(sc.rkjpTopN===undefined?5:sc.rkjpTopN):'Semua')+').';
       render();
+      setTimeout(function(){ var t=document.querySelector('table.rkjp, .rkjp-table, table'); if(t&&t.scrollIntoView) t.scrollIntoView({behavior:'smooth',block:'start'}); },50);
     }));
   }
   if(sc.rkt&&sc.rkt.length){
