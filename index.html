@@ -2255,19 +2255,6 @@ function renderRkas(){
   idt.appendChild(el('tr',{},[el('td',{},['Disusun oleh']),el('td',{},[disusunOleh(sc)])]));
   panel.appendChild(idt);
   var bar=el('div',{class:'btn-row no-print',style:'margin:0 0 14px'});
-  if(hasAnyRekom(sc)){
-    panel.appendChild(rekomControls(sc,'arkasSumber','arkasTopN','Isi dari Rapor Pendidikan',function(){
-      var tot=rekomTopSlice(sc,'arkasSumber','arkasTopN').length;
-      var nB=rekomTopSlice(sc,'arkasSumber','arkasTopN').filter(function(r){ return r.arkas; }).length;
-      var n=arkasFillFromRapor(sc); save();
-      var mm = !tot ? 'Tidak ada rekomendasi pada sumber yang dipilih. Ganti pilihan \"Isi dari\" atau unggah ulang file Rapor Pendidikan.'
-        : !nB ? 'Tidak ada yang ditambahkan: dari '+tot+' rekomendasi teratas, tidak ada yang ditandai membutuhkan anggaran (kolom ARKAS) di Rapor Pendidikan. Coba pilih \"Top\" lebih besar atau \"Semua\".'
-        : n ? (n+' baris ditambahkan dari Rapor Pendidikan.')
-        : 'Tidak ada yang ditambahkan: '+nB+' rekomendasi berbiaya sudah ada di tabel. Pilih \"Top\" lebih besar atau \"Semua\" untuk menambah lebih banyak.';
-      state.fillMsg={key:'arkasTopN',ok:n>0,text:mm};
-      render();
-    }));
-  }
   bar.appendChild(el('button',{class:'btn secondary',title:'Samakan tabel ARKAS dengan RKJP. Baris yang pernah Anda hapus akan ditambahkan kembali jika masih berbiaya "Ya".',onclick:function(){ var st1=arkasSync(sc,{reset:true}); save(); state.rkasSyncMsg=arkasSyncMsg(st1); render(); }},['Sinkronkan dengan RKJP']));
   bar.appendChild(el('button',{class:'btn secondary',onclick:function(){ addRkasRow(sc,{sumberDana:'',volume:'',satuan:''}); save(); render(); }},['+ Tambah baris']));
   bar.appendChild(el('button',{class:'btn secondary',title:'Mengisi semua sel yang masih kosong dengan data contoh. Sel yang sudah Anda isi tidak diubah.',onclick:function(){ var n=arkasContoh(sc); save(); state.rkasSyncMsg=n+' sel kosong diisi contoh. Ganti dengan data sekolah Anda, atau klik Hapus isian contoh.'; render(); }},['Isi sel kosong (contoh)']));
