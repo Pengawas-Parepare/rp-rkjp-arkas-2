@@ -2102,7 +2102,11 @@ function arkasSync(sc, opts){
   });
   sc.rkasIgnored=sc.rkasIgnored.filter(function(k){ return !!want[k]; });
   var keep=[], seen={};
+  var covered={};
+  Object.keys(want).forEach(function(k){ if(want[k].rid) covered[want[k].rid]=1; });
   sc.rkas.forEach(function(r){
+    /* baris lama hasil isian langsung dari Rapor (rapor:<id>) yang sudah tercakup RKJP dan belum diisi anggarannya: duplikat, dibuang */
+    if(r.sourceKey&&r.sourceKey.indexOf('rapor:')===0&&covered[r.sourceKey.slice(6)]&&rkasRowEmpty(r)){ st.removed++; return; }
     if(!r.sourceKey||r.sourceKey.indexOf('rkjp:')!==0){ keep.push(r); return; }
     var w=want[r.sourceKey];
     if(w && !seen[r.sourceKey]){
