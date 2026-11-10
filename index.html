@@ -2260,10 +2260,11 @@ function renderRkas(){
       var tot=rekomTopSlice(sc,'arkasSumber','arkasTopN').length;
       var nB=rekomTopSlice(sc,'arkasSumber','arkasTopN').filter(function(r){ return r.arkas; }).length;
       var n=arkasFillFromRapor(sc); save();
-      state.rkasSyncMsg = !tot ? 'Tidak ada rekomendasi pada sumber yang dipilih. Ganti pilihan \"Isi dari\" atau unggah ulang file Rapor Pendidikan.'
+      var mm = !tot ? 'Tidak ada rekomendasi pada sumber yang dipilih. Ganti pilihan \"Isi dari\" atau unggah ulang file Rapor Pendidikan.'
         : !nB ? 'Tidak ada yang ditambahkan: dari '+tot+' rekomendasi teratas, tidak ada yang ditandai membutuhkan anggaran (kolom ARKAS) di Rapor Pendidikan. Coba pilih \"Top\" lebih besar atau \"Semua\".'
         : n ? (n+' baris ditambahkan dari Rapor Pendidikan.')
         : 'Tidak ada yang ditambahkan: '+nB+' rekomendasi berbiaya sudah ada di tabel. Pilih \"Top\" lebih besar atau \"Semua\" untuk menambah lebih banyak.';
+      state.fillMsg={key:'arkasTopN',ok:n>0,text:mm};
       render();
     }));
   }
@@ -2835,6 +2836,10 @@ function rekomControls(sc, sumberKey, topKey, fillLabel, onFill){
   topSel.addEventListener('change',function(){ sc[topKey]=Number(topSel.value); save(); });
   box.appendChild(topSel);
   box.appendChild(el('button',{class:'btn',onclick:onFill},[fillLabel]));
+  if(state.fillMsg && state.fillMsg.key===topKey){
+    box.appendChild(el('div',{style:'flex-basis:100%;font-size:13px;font-weight:600;padding:8px 10px;border-radius:4px;background:'+(state.fillMsg.ok?'#e3f1e6':'#fff3d6')+';color:'+(state.fillMsg.ok?'#1d4a2c':'#7a5200')},[state.fillMsg.text]));
+    state.fillMsg=null;
+  }
   if(!nAll) box.appendChild(el('span',{style:'font-size:12px;color:var(--ink-soft);flex-basis:100%'},['Rekom. Keseluruhan belum tersedia: unggah ulang file Rapor Pendidikan yang memuat sheet rekomendasi keseluruhan.']));
   return box;
 }
@@ -2971,9 +2976,7 @@ function renderRkjp(){
   if(hasAnyRekom(sc)){
     panel.appendChild(rekomControls(sc,'rkjpSumber','rkjpTopN','Isi otomatis dari Rapor Pendidikan',function(){
       var tot=rekomTopSlice(sc,'rkjpSumber','rkjpTopN').length;
-      if(!tot){ state.rkjpMsg='Tidak ada rekomendasi pada sumber yang dipilih. Ganti pilihan "Isi dari" atau unggah ulang file Rapor Pendidikan.'; render(); return; }
-      var lama=(sc.rkjp||[]).filter(function(x){ return x.sourceKey&&x.sourceKey.indexOf('rapor:')===0; }).length;
-      if(lama && !confirm('Tabel RKJP akan diisi ulang sesuai pilihan ('+tot+' rekomendasi teratas). '+lama+' baris hasil isian Rapor sebelumnya diganti, termasuk jika sudah Anda ubah. Baris yang Anda tambah sendiri tidak dihapus. Lanjutkan?')) return;
+      if(!tot){ state.fillMsg={key:'rkjpTopN',ok:false,text:'Tidak ada rekomendasi pada sumber yang dipilih. Ganti pilihan "Isi dari" atau unggah ulang file Rapor Pendidikan.'}; render(); return; }
       sc.rkjp=(sc.rkjp||[]).filter(function(x){ return !(x.sourceKey&&x.sourceKey.indexOf('rapor:')===0); });
       rkjpPruneBlank(sc); sc.rkjpAuto=true;
       var nAdd=raporRkjpFill(sc);
@@ -2983,7 +2986,7 @@ function renderRkjp(){
       var lain=sc.rkjp.filter(function(x){ return ord[x.sourceKey]===undefined; });
       sc.rkjp=dr.concat(lain);
       save();
-      state.rkjpMsg=nAdd+' prioritas dari Rapor Pendidikan diisi ke tabel (Top '+(Number(sc.rkjpTopN)>0||sc.rkjpTopN===undefined?(sc.rkjpTopN===undefined?5:sc.rkjpTopN):'Semua')+').';
+      state.fillMsg={key:'rkjpTopN',ok:true,text:'Selesai: tabel RKJP diisi ulang dengan '+nAdd+' prioritas dari Rapor Pendidikan ('+(sc.rkjpTopN===0?'semua':'Top '+(sc.rkjpTopN===undefined||sc.rkjpTopN===null?5:sc.rkjpTopN))+'). Baris hasil Rapor sebelumnya diganti; baris yang Anda tambah sendiri tetap ada.'};
       render();
       setTimeout(function(){ var t=document.querySelector('table.rkjp, .rkjp-table, table'); if(t&&t.scrollIntoView) t.scrollIntoView({behavior:'smooth',block:'start'}); },50);
     }));
