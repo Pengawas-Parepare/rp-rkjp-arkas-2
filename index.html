@@ -2097,7 +2097,7 @@ function arkasSync(sc, opts){
       if(im.biaya!=='Ya' || !(im.uraian||it.kegiatan||it.indikator)) return;
       var key='rkjp:'+im.id;
       want[key]={benahi:it.kegiatan||it.indikator||'', impl:im.uraian||'', kegiatan:nm[0]||'', rid:rid};
-      order.push(key);
+      if(order.indexOf(key)<0) order.push(key);
     });
   });
   sc.rkasIgnored=sc.rkasIgnored.filter(function(k){ return !!want[k]; });
@@ -2123,6 +2123,7 @@ function arkasSync(sc, opts){
   sc.rkas=keep;
   order.forEach(function(k){
     if(seen[k]||sc.rkasIgnored.indexOf(k)>=0) return;
+    seen[k]=1;
     var w=want[k];
     addRkasRow(sc,{benahi:w.benahi,implementasi:w.impl,kegiatan:w.kegiatan,raporId:w.rid,sourceKey:k,srcBenahi:w.benahi,srcImpl:w.impl,sumberDana:'',volume:'',satuan:''});
     st.added++;
